@@ -27,8 +27,9 @@ public class ExtensibleCalculator {
         input = "(" + input + ")";
 
         while (!input.matches(doubleMatch)) {
+            String newInput = input;
             //remove excess parenthesis
-            input = replaceFunction(input, Pattern.compile("(\\(+)\\s*(" + doubleMatch +")\\s*(\\)+)"), it -> {
+            newInput = replaceFunction(newInput, Pattern.compile("(\\(+)\\s*(" + doubleMatch +")\\s*(\\)+)"), it -> {
                 if (it[1].length() < it[3].length()) {
                     return it[2] + it[3].substring(it[1].length());
                 } else if (it[3].length() < it[1].length()) {
@@ -38,9 +39,15 @@ public class ExtensibleCalculator {
             });
 
             //parse ready symbol groups
-            input = replaceFunction(input, Pattern.compile("\\(([^()]+)\\)"), it -> parseSymbols(it[1]));
+            newInput = replaceFunction(newInput, Pattern.compile("\\(([^()]+)\\)"), it -> parseSymbols(it[1]));
 
             //TODO: functions
+
+
+            if (newInput.equals(input)) {
+                throw new RuntimeException("failed to parse \"" + input + "\" due to an unknown operation");
+            }
+            input = newInput;
         }
 
         return input;
