@@ -52,7 +52,7 @@ public class ExtensibleCalculator {
     private static String parseSymbols(String input) {
         while (!input.matches(doubleMatch)) {
             for (Map.Entry<String, Function<Double[], Double>> sym : symbolOperations.entrySet()) {
-                input = replaceFunction(input, Pattern.compile("(" + doubleMatch + ")\\s*(?:\\" + sym.getKey() + "\\s*(" + doubleMatch + "))+"), it -> {
+                input = replaceFunction(input, Pattern.compile(doubleMatch + "(?:\\s*\\" + sym.getKey() + "\\s*" + doubleMatch + ")+"), it -> {
                     Double[] args = Arrays.stream(it[0].split("\\" + sym.getKey())).map(Double::parseDouble).toArray(Double[]::new);
                     return Double.toString(sym.getValue().apply(args));
                 });

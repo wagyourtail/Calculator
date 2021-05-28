@@ -1,9 +1,7 @@
 package xyz.wagyourtail.calculator;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class DefaultOperations {
