@@ -11,9 +11,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ExtensibleCalculator {
-    protected static final Map<String, Function<Double[], Double>> functionOperations = DefaultOperations.getFunctionOperations();
-    protected static final Map<String, Function<Double[], Double>> symbolOperations = DefaultOperations.getSymbolOperations();
-    private static final String doubleMatch = "(?:\\d*\\.?\\d+|NaN)";
+    protected static final Map<String, Function<String, String>> functionOperations = DefaultOperations.getFunctionOperations();
+    protected static final Map<String, Function<String, String>> symbolOperations = DefaultOperations.getSymbolOperations();
+    public static final String doubleMatch = "(?:-?\\d*\\.?\\d+|NaN)";
 
 
     public static void main(String... args) {
@@ -51,11 +51,8 @@ public class ExtensibleCalculator {
      */
     private static String parseSymbols(String input) {
         while (!input.matches(doubleMatch)) {
-            for (Map.Entry<String, Function<Double[], Double>> sym : symbolOperations.entrySet()) {
-                input = replaceFunction(input, Pattern.compile(doubleMatch + "(?:\\s*\\" + sym.getKey() + "\\s*" + doubleMatch + ")+"), it -> {
-                    Double[] args = Arrays.stream(it[0].split("\\" + sym.getKey())).map(Double::parseDouble).toArray(Double[]::new);
-                    return Double.toString(sym.getValue().apply(args));
-                });
+            for (Map.Entry<String, Function<String, String>> sym : symbolOperations.entrySet()) {
+                input = replaceFunction(input, Pattern.compile(doubleMatch + "(?:\\s*" + sym.getKey() + "\\s*" + doubleMatch + ")+"), it -> sym.getValue().apply(it[0]));
             }
         }
         return input;
