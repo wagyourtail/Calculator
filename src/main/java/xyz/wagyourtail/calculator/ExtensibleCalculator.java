@@ -51,9 +51,14 @@ public class ExtensibleCalculator {
      */
     private static String parseSymbols(String input) {
         while (!input.matches(doubleMatch)) {
+            String newInput = input;
             for (Map.Entry<String, Function<String, String>> sym : symbolOperations.entrySet()) {
-                input = replaceFunction(input, Pattern.compile(doubleMatch + "(?:\\s*" + sym.getKey() + "\\s*" + doubleMatch + ")+"), it -> sym.getValue().apply(it[0]));
+                newInput = replaceFunction(newInput, Pattern.compile(doubleMatch + "(?:\\s*" + sym.getKey() + "\\s*" + doubleMatch + ")+"), it -> sym.getValue().apply(it[0]));
             }
+            if (newInput.equals(input)) {
+                throw new RuntimeException("failed to parse \"" + input + "\" due to an unknown symbol");
+            }
+            input = newInput;
         }
         return input;
     }
