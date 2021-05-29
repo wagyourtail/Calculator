@@ -23,8 +23,8 @@ public class Exceptions {
     }
 
     public static class UnknownFunctionException extends CalculationException {
-        public UnknownFunctionException(String expression) {
-            super("Unknown function in expression \"" + expression + "\"");
+        public UnknownFunctionException(String fname) {
+            super("Unknown function in expression \"" + fname + "\"");
         }
 
     }
