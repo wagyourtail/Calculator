@@ -17,7 +17,7 @@ public class ExtensibleCalculator {
 
     public static void main(String... args) {
         String input = String.join(" ", args);
-        System.out.println(calculate("cos(pi/3)"));
+        System.out.println(calculate(input));
     }
 
 
