@@ -73,31 +73,32 @@ public class ExtensibleCalculator {
         for (Map.Entry<String, Function<String, String>> sym : symbolOperations.entrySet()) {
             input = reduceSymbol(input, sym.getKey(), sym.getValue());
         }
+        if (!input.matches(doubleMatch)) throw new RuntimeException("Unknown symbols in calculation + \"" + input + "\"");
         return input;
     }
 
     private static String reduceSymbol(String input, String symbolMatch, Function<String, String> replaceFunction) {
         Matcher m = Pattern.compile(doubleMatch + "?\\s*(?:^|[" + symbolMatch + "])\\s*" + doubleMatch).matcher(input);
-        String prevMatch = "";
+        StringBuilder prevMatch = new StringBuilder();
         int prevMatchStart = 0;
         int prevMatchEnd = 0;
 
         int offset = 0;
         while (m.find()) {
             if (m.start() == prevMatchEnd) {
-                prevMatch += m.group(0);
+                prevMatch.append(m.group(0));
                 prevMatchEnd = m.end();
             } else {
-                String replacement = replaceFunction.apply(prevMatch);
+                String replacement = replaceFunction.apply(prevMatch.toString());
                 input = input.substring(0, prevMatchStart + offset) + replacement + input.substring(prevMatchEnd + offset);
                 offset += replacement.length() - (prevMatchEnd - prevMatchStart);
                 prevMatchStart = m.start();
                 prevMatchEnd = m.end();
-                prevMatch = m.group(0);
+                prevMatch = new StringBuilder(m.group(0));
             }
         }
-        if (!prevMatch.equals("")) {
-            String replacement = replaceFunction.apply(prevMatch);
+        if (!prevMatch.toString().equals("")) {
+            String replacement = replaceFunction.apply(prevMatch.toString());
             input = input.substring(0, prevMatchStart + offset) + replacement + input.substring(prevMatchEnd + offset);
         }
         return input;
