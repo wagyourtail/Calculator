@@ -3,14 +3,13 @@ package xyz.wagyourtail.calculator;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DefaultOperations {
 
-    public static Map<String, Function<String[], String>> getFunctionOperations() {
-        Map<String, Function<String[], String>> ops = new LinkedHashMap<>();
+    public static Map<String, FunctionWithException<String[], String>> getFunctionOperations() {
+        Map<String, FunctionWithException<String[], String>> ops = new LinkedHashMap<>();
         ops.put("cos", DefaultOperations::cos);
         ops.put("sin", DefaultOperations::sin);
         ops.put("tan", DefaultOperations::tan);
@@ -20,8 +19,8 @@ public class DefaultOperations {
         return ops;
     }
 
-    public static Map<String, Function<String, String>> getSymbolOperations() {
-        Map<String, Function<String, String>> ops = new LinkedHashMap<>();
+    public static Map<String, FunctionWithException<String, String>> getSymbolOperations() {
+        Map<String, FunctionWithException<String, String>> ops = new LinkedHashMap<>();
         ops.put("\\^", DefaultOperations::power);
         ops.put("\\*|/|%", DefaultOperations::multiplyOrDivideOrModulo);
         ops.put("\\+|-",  DefaultOperations::addOrSubtract);
@@ -35,33 +34,33 @@ public class DefaultOperations {
         return constants;
     }
 
-    public static String cos(String[] args) {
-        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for cos, expected 1");
+    public static String cos(String[] args) throws Exceptions.FunctionParameterCountException {
+        if (args.length != 1) throw new Exceptions.FunctionParameterCountException("cos", 1, args.length);
         return Double.toString(Math.cos(Double.parseDouble(args[0])));
     }
 
-    public static String sin(String[] args) {
-        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for sin, expected 1");
+    public static String sin(String[] args) throws Exceptions.FunctionParameterCountException {
+        if (args.length != 1) throw new Exceptions.FunctionParameterCountException("sin", 1, args.length);
         return Double.toString(Math.sin(Double.parseDouble(args[0])));
     }
 
-    public static String tan(String[] args) {
-        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for tan, expected 1");
+    public static String tan(String[] args) throws Exceptions.FunctionParameterCountException {
+        if (args.length != 1) throw new Exceptions.FunctionParameterCountException("tan", 1, args.length);
         return Double.toString(Math.tan(Double.parseDouble(args[0])));
     }
 
-    public static String floor(String[] args) {
-        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for floor, expected 1");
+    public static String floor(String[] args) throws Exceptions.FunctionParameterCountException {
+        if (args.length != 1) throw new Exceptions.FunctionParameterCountException("floor", 1, args.length);
         return Double.toString(Math.floor(Double.parseDouble(args[0])));
     }
 
-    public static String ceil(String[] args) {
-        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for ceil, expected 1");
+    public static String ceil(String[] args) throws Exceptions.FunctionParameterCountException {
+        if (args.length != 1) throw new Exceptions.FunctionParameterCountException("ceil", 1, args.length);
         return Double.toString(Math.ceil(Double.parseDouble(args[0])));
     }
 
-    public static String round(String[] args) {
-        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for round, expected 1");
+    public static String round(String[] args) throws Exceptions.FunctionParameterCountException {
+        if (args.length != 1) throw new Exceptions.FunctionParameterCountException("round", 1, args.length);
         return Double.toString(Math.round(Double.parseDouble(args[0])));
     }
 
@@ -106,7 +105,7 @@ public class DefaultOperations {
 
     }
 
-    public static String bitwiseOperators(String args) {
+    public static String bitwiseOperators(String args) throws Exceptions.BitwiseCalculationException {
         //shortcut if no-op.
         if (args.matches(ExtensibleCalculator.doubleMatch)) {
             return args;
@@ -117,7 +116,7 @@ public class DefaultOperations {
         while (m.find()) {
             double dval = Double.parseDouble(m.group(2));
             int ival = (int) dval;
-            if (dval != ival) throw new RuntimeException("bitwise operation does not support non-integer value \"" + dval + "\"");
+            if (dval != ival) throw new Exceptions.BitwiseCalculationException(dval);
             switch (m.group(1)) {
                 case ">>":
                     start >>= ival;

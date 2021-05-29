@@ -2,26 +2,28 @@ package xyz.wagyourtail.calculator;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ExtensibleCalculator {
-    protected static final Map<String, Function<String[], String>> functionOperations = DefaultOperations.getFunctionOperations();
-    protected static final Map<String, Function<String, String>> symbolOperations = DefaultOperations.getSymbolOperations();
+    protected static final Map<String, FunctionWithException<String[], String>> functionOperations = DefaultOperations.getFunctionOperations();
+    protected static final Map<String, FunctionWithException<String, String>> symbolOperations = DefaultOperations.getSymbolOperations();
     protected static final Map<String, Double> constants = DefaultOperations.getConstants();
     public static final String doubleMatch = "(?:-?\\d*\\.?\\d+(?:E-?\\d+)?|NaN)";
 
 
     public static void main(String... args) {
         String input = String.join(" ", args);
-        System.out.println(calculate(input));
+        try {
+            System.out.println(calculate(input));
+        } catch (Exceptions.CalculationException e) {
+            e.printStackTrace();
+        }
     }
 
 
-    public static String calculate(String input) {
+    public static String calculate(String input) throws Exceptions.CalculationException {
         //prepare input
         input = "(" + input + ")";
         for (Map.Entry<String, Double> constant : constants.entrySet()) {
@@ -50,7 +52,7 @@ public class ExtensibleCalculator {
             // *ready means doesn't have any nesting (grouping symbols/functions) inside that still need to be parsed.
 
             if (newInput.equals(input)) {
-                throw new RuntimeException("failed to parse \"" + input + "\" due to an unknown operation");
+                throw new Exceptions.UnknownOperationException(input);
             }
             input = newInput;
         }
@@ -58,26 +60,30 @@ public class ExtensibleCalculator {
         return input;
     }
 
-    private static String parseFunction(String name, String combined_args) {
-        if (!functionOperations.containsKey(name)) throw new RuntimeException("function \"" + name + "\" does not exist");
+    private static String parseFunction(String name, String combined_args) throws Exceptions.CalculationException {
+        if (!functionOperations.containsKey(name)) throw new Exceptions.UnknownFunctionException(name);
 
         //this is the only recursion and means we only go one level deep since we are parsing only "ready" functions.
-        String[] args = Arrays.stream(combined_args.split(",")).map(ExtensibleCalculator::calculate).toArray(String[]::new);
+        String[] args = combined_args.split(",");
+        for (int i = 0; i < args.length; ++i) {
+            args[i] = calculate(args[i]);
+        }
+
         return functionOperations.get(name).apply(args);
     }
 
     /**
      * only use on symbol only math
      */
-    private static String parseSymbols(String input) {
-        for (Map.Entry<String, Function<String, String>> sym : symbolOperations.entrySet()) {
+    private static String parseSymbols(String input) throws Exceptions.CalculationException {
+        for (Map.Entry<String, FunctionWithException<String, String>> sym : symbolOperations.entrySet()) {
             input = reduceSymbol(input, sym.getKey(), sym.getValue());
         }
-        if (!input.matches(doubleMatch)) throw new RuntimeException("Unknown symbols in calculation + \"" + input + "\"");
+        if (!input.matches(doubleMatch)) throw new Exceptions.UnknownSymbolException(input);
         return input;
     }
 
-    private static String reduceSymbol(String input, String symbolMatch, Function<String, String> replaceFunction) {
+    private static String reduceSymbol(String input, String symbolMatch, FunctionWithException<String, String> replaceFunction) throws Exceptions.CalculationException {
         Matcher m = Pattern.compile(doubleMatch + "?\\s*(?:^|" + symbolMatch + ")\\s*" + doubleMatch).matcher(input);
         StringBuilder prevMatch = new StringBuilder();
         int prevMatchStart = 0;
@@ -104,7 +110,7 @@ public class ExtensibleCalculator {
         return input;
     }
 
-    public static @NotNull String replaceFunction(@NotNull String str, @NotNull Pattern pattern, @NotNull Function<String[], String> replaceFn) {
+    public static @NotNull String replaceFunction(@NotNull String str, @NotNull Pattern pattern, @NotNull FunctionWithException<String[], String> replaceFn) throws Exceptions.CalculationException {
         Matcher m = pattern.matcher(str);
         int offset = 0;
         while (m.find()) {
@@ -119,4 +125,5 @@ public class ExtensibleCalculator {
         }
         return str;
     }
+
 }
