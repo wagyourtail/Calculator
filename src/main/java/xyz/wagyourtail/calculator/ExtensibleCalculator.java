@@ -70,15 +70,35 @@ public class ExtensibleCalculator {
      * only use on symbol only math
      */
     private static String parseSymbols(String input) {
-        while (!input.matches(doubleMatch)) {
-            String newInput = input;
-            for (Map.Entry<String, Function<String, String>> sym : symbolOperations.entrySet()) {
-                newInput = replaceFunction(newInput, Pattern.compile(doubleMatch + "(?:\\s*" + sym.getKey() + "\\s*" + doubleMatch + ")+"), it -> sym.getValue().apply(it[0]));
+        for (Map.Entry<String, Function<String, String>> sym : symbolOperations.entrySet()) {
+            input = reduceSymbol(input, sym.getKey(), sym.getValue());
+        }
+        return input;
+    }
+
+    private static String reduceSymbol(String input, String symbolMatch, Function<String, String> replaceFunction) {
+        Matcher m = Pattern.compile(doubleMatch + "?\\s*(?:^|[" + symbolMatch + "])\\s*" + doubleMatch).matcher(input);
+        String prevMatch = "";
+        int prevMatchStart = 0;
+        int prevMatchEnd = 0;
+
+        int offset = 0;
+        while (m.find()) {
+            if (m.start() == prevMatchEnd) {
+                prevMatch += m.group(0);
+                prevMatchEnd = m.end();
+            } else {
+                String replacement = replaceFunction.apply(prevMatch);
+                input = input.substring(0, prevMatchStart + offset) + replacement + input.substring(prevMatchEnd + offset);
+                offset += replacement.length() - (prevMatchEnd - prevMatchStart);
+                prevMatchStart = m.start();
+                prevMatchEnd = m.end();
+                prevMatch = m.group(0);
             }
-            if (newInput.equals(input)) {
-                throw new RuntimeException("failed to parse \"" + input + "\" due to an unknown symbol");
-            }
-            input = newInput;
+        }
+        if (!prevMatch.equals("")) {
+            String replacement = replaceFunction.apply(prevMatch);
+            input = input.substring(0, prevMatchStart + offset) + replacement + input.substring(prevMatchEnd + offset);
         }
         return input;
     }

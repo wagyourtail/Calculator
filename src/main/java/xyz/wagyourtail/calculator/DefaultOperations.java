@@ -20,8 +20,8 @@ public class DefaultOperations {
     public static Map<String, Function<String, String>> getSymbolOperations() {
         Map<String, Function<String, String>> ops = new LinkedHashMap<>();
         ops.put("\\^", DefaultOperations::power);
-        ops.put("[*/%]", DefaultOperations::multiplyOrDivideOrModulo);
-        ops.put("[+-]",  DefaultOperations::addOrSubtract);
+        ops.put("*/%", DefaultOperations::multiplyOrDivideOrModulo);
+        ops.put("+-",  DefaultOperations::addOrSubtract);
         return ops;
     }
 
