@@ -17,7 +17,7 @@ public class ExtensibleCalculator {
 
     public static void main(String... args) {
         String input = String.join(" ", args);
-        System.out.println(calculate(input));
+        System.out.println(calculate("cos(pi/3)"));
     }
 
 
@@ -78,7 +78,7 @@ public class ExtensibleCalculator {
     }
 
     private static String reduceSymbol(String input, String symbolMatch, Function<String, String> replaceFunction) {
-        Matcher m = Pattern.compile(doubleMatch + "?\\s*(?:^|[" + symbolMatch + "])\\s*" + doubleMatch).matcher(input);
+        Matcher m = Pattern.compile(doubleMatch + "?\\s*(?:^|" + symbolMatch + ")\\s*" + doubleMatch).matcher(input);
         StringBuilder prevMatch = new StringBuilder();
         int prevMatchStart = 0;
         int prevMatchEnd = 0;

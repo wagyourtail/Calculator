@@ -14,14 +14,18 @@ public class DefaultOperations {
         ops.put("cos", DefaultOperations::cos);
         ops.put("sin", DefaultOperations::sin);
         ops.put("tan", DefaultOperations::tan);
+        ops.put("floor", DefaultOperations::floor);
+        ops.put("ceil", DefaultOperations::ceil);
+        ops.put("round", DefaultOperations::round);
         return ops;
     }
 
     public static Map<String, Function<String, String>> getSymbolOperations() {
         Map<String, Function<String, String>> ops = new LinkedHashMap<>();
         ops.put("\\^", DefaultOperations::power);
-        ops.put("*/%", DefaultOperations::multiplyOrDivideOrModulo);
-        ops.put("+-",  DefaultOperations::addOrSubtract);
+        ops.put("\\*|/|%", DefaultOperations::multiplyOrDivideOrModulo);
+        ops.put("\\+|-",  DefaultOperations::addOrSubtract);
+        ops.put("<<|>>|\\||&", DefaultOperations::bitwiseOperators);
         return ops;
     }
 
@@ -42,8 +46,23 @@ public class DefaultOperations {
     }
 
     public static String tan(String[] args) {
-        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for sin, expected 1");
+        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for tan, expected 1");
         return Double.toString(Math.tan(Double.parseDouble(args[0])));
+    }
+
+    public static String floor(String[] args) {
+        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for floor, expected 1");
+        return Double.toString(Math.floor(Double.parseDouble(args[0])));
+    }
+
+    public static String ceil(String[] args) {
+        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for ceil, expected 1");
+        return Double.toString(Math.ceil(Double.parseDouble(args[0])));
+    }
+
+    public static String round(String[] args) {
+        if (args.length != 1) throw new RuntimeException("incorrect number of arguments for round, expected 1");
+        return Double.toString(Math.round(Double.parseDouble(args[0])));
     }
 
     public static String power(String sargs) {
@@ -56,7 +75,7 @@ public class DefaultOperations {
     }
 
     public static String multiplyOrDivideOrModulo(String args) {
-        Matcher m = Pattern.compile("([*/%])\\s*(" + ExtensibleCalculator.doubleMatch + ")\\s*").matcher("*" + args);
+        Matcher m = Pattern.compile("(\\*|/|%)\\s*(" + ExtensibleCalculator.doubleMatch + ")\\s*").matcher("*" + args);
         double start = 1;
         while (m.find()) {
             switch (m.group(1)) {
@@ -74,7 +93,7 @@ public class DefaultOperations {
     }
 
     public static String addOrSubtract(String args) {
-        Matcher m = Pattern.compile("([+-])\\s*(" + ExtensibleCalculator.doubleMatch + ")\\s*").matcher("+" + args);
+        Matcher m = Pattern.compile("(\\+|-)\\s*(" + ExtensibleCalculator.doubleMatch + ")\\s*").matcher("+" + args);
         double start = 0;
         while (m.find()) {
             if (m.group(1).equals("+")) {
@@ -85,5 +104,35 @@ public class DefaultOperations {
         }
         return Double.toString(start);
 
+    }
+
+    public static String bitwiseOperators(String args) {
+        //shortcut if no-op.
+        if (args.matches(ExtensibleCalculator.doubleMatch)) {
+            return args;
+        }
+
+        Matcher m = Pattern.compile("(<<|>>|\\||&)\\s*(" + ExtensibleCalculator.doubleMatch + ")\\s*").matcher("|" + args);
+        int start = 0;
+        while (m.find()) {
+            double dval = Double.parseDouble(m.group(2));
+            int ival = (int) dval;
+            if (dval != ival) throw new RuntimeException("bitwise operation does not support non-integer value \"" + dval + "\"");
+            switch (m.group(1)) {
+                case ">>":
+                    start >>= ival;
+                    break;
+                case "<<":
+                    start <<= ival;
+                    break;
+                case "|":
+                    start |= ival;
+                    break;
+                case "&":
+                    start &= ival;
+                    break;
+            }
+        }
+        return Integer.toString(start);
     }
 }
